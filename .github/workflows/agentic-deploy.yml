@@ -15,7 +15,7 @@ jobs:
         uses: appleboy/ssh-action@v1.0.3
         env:
           TF_DB_HOST: ${{ secrets.DB_HOST }}
-          TF_API_URL: "app-20260326134633223100000007-528012986.us-east-1.elb.amazonaws.com"
+          TF_API_URL: "app-20260326160533708300000006-248675663.us-east-1.elb.amazonaws.com"
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
