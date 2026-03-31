@@ -12,15 +12,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate EC2_HOST secret
+      - name: Resolve deploy host
+        id: resolve_host
+        env:
+          PUBLIC_URL: ${{ env.PUBLIC_URL }}
+          EC2_HOST_SECRET: ${{ secrets.EC2_HOST }}
         run: |
-          test -n "${{ secrets.EC2_HOST }}" || { echo "Missing EC2_HOST secret"; exit 1; }
+          HOST="$EC2_HOST_SECRET"
+          if [ -z "$HOST" ] && [ -n "$PUBLIC_URL" ]; then
+            HOST=$(python3 - <<'PY'
+import os
+from urllib.parse import urlparse
+u = (os.environ.get('PUBLIC_URL') or '').strip()
+h = urlparse(u).hostname if u else ''
+if h and not h.endswith('elb.amazonaws.com'):
+    print(h)
+PY
+)
+          fi
+          if [ -z "$HOST" ]; then
+            echo "Missing deploy host: set EC2_HOST or provide PUBLIC_URL with EC2 host" >&2
+            exit 1
+          fi
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         env:
           PUBLIC_URL: ${{ secrets.PUBLIC_URL }}
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ steps.resolve_host.outputs.host }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: PUBLIC_URL
