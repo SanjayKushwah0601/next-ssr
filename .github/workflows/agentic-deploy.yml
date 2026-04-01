@@ -22,7 +22,7 @@ jobs:
           aws-region: us-east-1
       - name: Deploy via SSM
         env:
-          REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+          REPO_URL: "https://github.com/yogeshtatwalzolute/next-ssr.git"
           DB_HOST: ${{ secrets.DB_HOST }}
           API_URL: "app-20260401072518931600000008-225601886.us-east-1.elb.amazonaws.com"
         run: |
